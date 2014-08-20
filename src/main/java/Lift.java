@@ -419,4 +419,13 @@ public class Lift {
             throw new IllegalArgumentException("thisFloor is invalid");
         }
     }
+
+    @Override
+    public String toString() {
+	return "Lift [numberOfFloors=" + numberOfFloors + ", distanceBetweenFloors=" + distanceBetweenFloors + ", doorOpenCloseThreshold=" + doorOpenCloseThreshold + ", velocity=" + velocity
+		+ ", buildingHeight=" + buildingHeight + ", timeLastCalled=" + timeLastCalled + ", lState=" + lState + ", door=" + door + ", motor=" + motor + ", liftButtonPanel=" + liftButtonPanel
+		+ "]";
+    }
+    
+    
 }

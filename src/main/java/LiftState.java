@@ -81,4 +81,11 @@ public class LiftState {
         if (isGoingUp())    return UP;
         else                return DOWN;
     }
+
+    @Override
+    public String toString() {
+	return "LiftState [stationary=" + stationary + ", goingUp=" + goingUp + ", goingDown=" + goingDown + ", positionFromBottom=" + positionFromBottom + ", distanceTravelled=" + distanceTravelled
+		+ "]";
+    }
+    
 }

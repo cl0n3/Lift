@@ -21,7 +21,7 @@ public class LiftController implements Subject {
     //private static final int MAX_ITERATIONS = 10000000;   //This is just for debugging- Controls how many times the LC loop can execute
    
     private List<Observer> observers;  //This is the list of observer objects from the GUI
-    private final Object MUTEX= new Object();
+    private final Object MUTEX = new Object();
     private boolean changed;    //keep track of the change in the state of LC and used in notifying observers
     
     private int numberOfFloors;
@@ -37,12 +37,16 @@ public class LiftController implements Subject {
     private Queue<Node>[] liftNopoll;          //An array which stores a queue for each lift. The queue holds nodes which tell the lift where to go. This queue is the result from mapping the selection arrays to a set of floors for the lift to visit
     private int[][] currentAndNextFloorsForLifts; //This array has 2 rows x numberOfLifts cols. It tells us which floor a lift is currently at (row 1) and what is the next floor for it to visit (row 2)    
     
+    public Lift getLifts(int lift) {
+	return lifts[lift];
+    }
+    
     /**
      * Private class Node
      * To tell a lift where to go, we will maintain a queue of nodes for that lift.
      * The node tells the lift the floor it has to go to, but also where the instruction came from (via selections arrays)
      */
-    private static class Node {
+    static class Node {
         
         private int floor;
         private boolean fromLift;
@@ -160,11 +164,9 @@ public class LiftController implements Subject {
         //Check the direction
         directionCheck(direction);
         
-        String origin;  //This is where the origin of the instruction comes from. if selection == true, it must come from the floor, otherwise it comes from the LC
-        
+        //This is where the origin of the instruction comes from. if selection == true, it must come from the floor, otherwise it comes from the LC
+        String origin = selection ? ORIGIN_FROM_FLOOR : ORIGIN_FROM_LC;
         //Add to the instruction log 
-        if (selection) origin = ORIGIN_FROM_FLOOR;
-        else origin = ORIGIN_FROM_LC;    
         instructionLog.add(new Instruction(METHOD_ORIGIN_FROM_FLOOR, origin, thisFloor, NULL_LIFT, direction, selection));
         
         //Update the display on the floor
@@ -497,34 +499,29 @@ public class LiftController implements Subject {
             //initially dont care about up or down at a floor.
             //also don't care if a floor is selected more than once
             case 1: {       
-                //System.out.printf("Running matching algorithm 1\n"); 
                 
                 //for each lift, check all floors selected by the lift. add to the node queue for that lift
-                for(int i = 1; i <= numberOfLifts; i++) {
-                    //Store a copy of the existing queue for that lift as it may be useful
+                for(int lift = 1; lift <= numberOfLifts; lift++) {
                     //Now remove the existing queue for this lift as we are going to recalculate it
-                    //liftNopoll[i] = null;  //Must comment this out as when i press a button to call the lift, when this line sets liftNopoll[i] = null, the guideLift() can be running resulting in a nullPointerException
-                    liftNopoll[i] = new LinkedList<Node>();
+                    liftNopoll[lift] = new LinkedList<Node>();
                     
-                    for (int j = 1; j <= numberOfFloors; j++) {
-                        if (selectionsFromLift[j][i]) {
-                            //add a node: Node(int floor, boolean fromLift, boolean fromFloorUP, boolean fromFloorDOWN)
-                            //System.out.printf("adding a node from a lift\n");
-                            liftNopoll[i].add(new Node(j, true, false, false));
+                    for (int floor = 1; floor <= numberOfFloors; floor++) {
+                        if (selectionsFromLift[floor][lift]) {
+                            liftNopoll[lift].add(new Node(floor, true, false, false));
                         }
                     }
                 }
+                
                 //assign all selections from floors to be assigned to lift #1
-                for (int j = 1; j <= numberOfFloors; j++) {
-                    if (selectionsFromFloor[j][0]) {
-                        //System.out.printf("adding a node UP from a floor\n");
-                        liftNopoll[1].add(new Node(j, false, true, false));
+                for (int floor = 1; floor <= numberOfFloors; floor++) {
+                    if (selectionsFromFloor[floor][0]) {
+                        liftNopoll[1].add(new Node(floor, false, true, false));
                     }
-                    if (selectionsFromFloor[j][1]) {
-                       // System.out.printf("adding a node DOWN from a floor\n");
-                        liftNopoll[1].add(new Node(j, false, false, true));
+                    if (selectionsFromFloor[floor][1]) {
+                        liftNopoll[1].add(new Node(floor, false, false, true));
                     }
                 }
+                
                 //Debugging
                 for(int i = 1; i <= numberOfLifts; i++) {
                     System.out.printf("Size of queue for lift %d = %d\n", i, liftNopoll[i].size());
@@ -734,5 +731,12 @@ public class LiftController implements Subject {
             //call the method for a lift instruction
             selectFromLift(ins.getliftNumber(), ins.getfloorNumber(), ins.getselection());
         }                
+    }
+    
+    /**
+     * For testing only.
+     */
+    Queue<Node>[] getLiftNopoll() {
+	return liftNopoll;
     }
 }
